@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Property Leads</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f5f0e8; --surface: #faf7f2; --border: #d9d0c0; --border-light: #ede6d8;
+      --text: #1a1714; --text-muted: #7a7060; --text-faint: #b0a898;
+      --accent: #2d5a3d; --accent-light: #e8f0eb;
+      --warm: #8b5e3c; --warm-light: #f5ece4;
+      --gold: #c4923a; --gold-light: #fdf3e3;
+      --red: #8b3a3a; --blue: #2d4a6e; --blue-light: #e8edf5;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* HEADER */
+    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 64px; position: sticky; top: 0; z-index: 100; }
+    .logo { display: flex; align-items: baseline; gap: 0.5rem; }
+    .logo h1 { font-family: 'DM Serif Display', serif; font-size: 1.4rem; letter-spacing: -0.01em; }
+    .logo span { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; }
+    .header-actions { display: flex; align-items: center; gap: 0.75rem; }
+    .sync-info { font-size: 0.75rem; color: var(--text-faint); font-family: 'DM Mono', monospace; }
+
+    /* TABS */
+    .tab-bar { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 2rem; }
+    .tab { padding: 0.7rem 1.25rem; font-size: 0.8rem; font-weight: 500; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; user-select: none; }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* BUTTONS */
+    .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.8rem; font-family: 'DM Sans', sans-serif; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; }
+    .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+    .btn-primary:hover { background: #234a31; }
+    .btn-ghost { background: transparent; color: var(--text-muted); border-color: var(--border); }
+    .btn-ghost:hover { background: var(--border-light); color: var(--text); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* STATS BAR */
+    .stats-bar { display: flex; border-bottom: 1px solid var(--border); background: var(--surface); padding: 0 2rem; overflow-x: auto; }
+    .stat { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem 0.75rem 0; margin-right: 1.5rem; border-right: 1px solid var(--border-light); }
+    .stat:last-child { border-right: none; }
+    .stat-num { font-family: 'DM Serif Display', serif; font-size: 1.4rem; line-height: 1; }
+    .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; line-height: 1.3; }
+
+    /* TOOLBAR */
+    .toolbar { display: flex; align-items: center; gap: 0.75rem; padding: 1rem 2rem; flex-wrap: wrap; }
+    .filter-group { display: flex; gap: 0.25rem; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 2px; }
+    .filter-btn { padding: 0.3rem 0.75rem; border-radius: 3px; font-size: 0.75rem; font-family: 'DM Sans', sans-serif; font-weight: 500; cursor: pointer; border: none; background: transparent; color: var(--text-muted); transition: all 0.12s; }
+    .filter-btn.active { background: var(--text); color: white; }
+    .search-input { flex: 1; max-width: 280px; padding: 0.4rem 0.75rem; border: 1px solid var(--border); border-radius: 4px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; background: var(--surface); color: var(--text); outline: none; }
+    .search-input:focus { border-color: var(--accent); }
+    .search-input::placeholder { color: var(--text-faint); }
+    .spacer { flex: 1; }
+
+    /* PANELS */
+    .panel { margin: 0 2rem 1rem; border-radius: 6px; padding: 1.25rem; display: none; animation: slideDown 0.2s ease; }
+    .panel.open { display: block; }
+    @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+    .panel h3 { font-family: 'DM Serif Display', serif; font-size: 1rem; margin-bottom: 1rem; }
+    .panel-white { background: var(--surface); border: 1px solid var(--border); }
+    .panel-green { background: var(--accent-light); border: 1px solid #c0d4c7; }
+    .panel-green h3 { color: var(--accent); }
+    .panel-green p { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5; }
+    .gmail-log { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 0.75rem; font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--text-muted); max-height: 160px; overflow-y: auto; line-height: 1.8; display: none; }
+    .gmail-log.visible { display: block; }
+    .log-line { display: block; }
+    .log-line.ok { color: var(--accent); }
+    .log-line.err { color: var(--red); }
+    .log-line.info { color: var(--gold); }
+
+    /* FORM */
+    .form-grid { display: grid; gap: 0.75rem; margin-bottom: 0.75rem; }
+    .fg5 { grid-template-columns: 2fr 1fr 1fr 1fr 1fr; }
+    .fg4 { grid-template-columns: 1fr 1fr 1fr 2fr; }
+    .form-field { display: flex; flex-direction: column; gap: 0.25rem; }
+    .form-field label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 500; }
+    .form-field input, .form-field select { padding: 0.4rem 0.6rem; border: 1px solid var(--border); border-radius: 3px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; background: var(--bg); color: var(--text); outline: none; }
+    .form-field input:focus, .form-field select:focus { border-color: var(--accent); }
+    .form-actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+
+    /* TABLE */
+    .table-wrap { padding: 0 2rem 2rem; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; font-size: 0.82rem; }
+    thead { background: var(--text); color: white; }
+    th { padding: 0.6rem 0.85rem; text-align: left; font-size: 0.65rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'DM Mono', monospace; white-space: nowrap; cursor: pointer; user-select: none; }
+    th:hover { opacity: 0.8; }
+    td { padding: 0.7rem 0.85rem; border-bottom: 1px solid var(--border-light); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f0ebe0; }
+    .address-link { color: var(--text); text-decoration: none; font-weight: 500; }
+    .address-link:hover { color: var(--accent); text-decoration: underline; }
+    .badge { display: inline-flex; align-items: center; padding: 0.2rem 0.55rem; border-radius: 3px; font-size: 0.68rem; font-weight: 500; font-family: 'DM Mono', monospace; white-space: nowrap; }
+    .badge-new { background: var(--gold-light); color: var(--gold); border: 1px solid #e8c87a; }
+    .badge-interested { background: var(--accent-light); color: var(--accent); border: 1px solid #a8c9b4; }
+    .badge-toured { background: var(--blue-light); color: var(--blue); border: 1px solid #aabbd4; }
+    .badge-passed { background: #f0f0f0; color: #888; border: 1px solid #ccc; }
+    .badge-pending { background: var(--warm-light); color: var(--warm); border: 1px solid #d4a882; }
+    .source-badge { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.7rem; color: var(--text-muted); }
+    .source-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .source-dot.redfin { background: #d6001c; }
+    .source-dot.realtor { background: #d9373e; }
+    .source-dot.manual { background: var(--text-faint); }
+    .notes-cell { font-size: 0.75rem; color: var(--text-muted); font-style: italic; cursor: pointer; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .notes-cell:hover { color: var(--text); }
+    .notes-input { width: 100%; border: 1px solid var(--border); border-radius: 3px; padding: 0.25rem 0.4rem; font-family: 'DM Sans', sans-serif; font-size: 0.75rem; background: var(--bg); color: var(--text); outline: none; }
+    .action-btn { background: none; border: none; cursor: pointer; padding: 0.2rem 0.3rem; border-radius: 3px; color: var(--text-muted); font-size: 0.85rem; transition: all 0.12s; }
+    .action-btn:hover { background: var(--border-light); color: var(--red); }
+    .empty-state { text-align: center; padding: 4rem 2rem; color: var(--text-muted); }
+    .empty-state .big { font-family: 'DM Serif Display', serif; font-size: 2rem; color: var(--text-faint); margin-bottom: 0.5rem; }
+    .empty-state p { font-size: 0.85rem; line-height: 1.6; }
+
+    /* RENT ESTIMATOR */
+    .rent-page { padding: 1.5rem 2rem 3rem; }
+    .rent-input-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .rent-input-card h2 { font-family: 'DM Serif Display', serif; font-size: 1.2rem; margin-bottom: 0.4rem; }
+    .rent-input-card > p { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.5; }
+    .rent-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 0.75rem; align-items: end; }
+    .rent-results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    .result-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; position: relative; overflow: hidden; }
+    .result-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+    .result-card.ltr::before { background: var(--accent); }
+    .result-card.str::before { background: var(--gold); }
+    .result-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .result-card-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 500; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+    .result-tag { font-size: 0.62rem; padding: 0.15rem 0.5rem; border-radius: 2px; font-family: 'DM Mono', monospace; font-weight: 500; }
+    .result-tag.ltr { background: var(--accent-light); color: var(--accent); }
+    .result-tag.str { background: var(--gold-light); color: var(--gold); }
+    .result-main-price { font-family: 'DM Serif Display', serif; font-size: 2.2rem; line-height: 1; margin-bottom: 0.25rem; }
+    .result-sub { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem; }
+    .result-rows { display: flex; flex-direction: column; gap: 0.4rem; }
+    .result-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; padding: 0.35rem 0; border-bottom: 1px solid var(--border-light); }
+    .result-row:last-child { border-bottom: none; }
+    .result-row-label { color: var(--text-muted); }
+    .result-row-val { font-family: 'DM Mono', monospace; font-weight: 500; }
+    .result-row-val.pos { color: var(--accent); }
+    .result-row-val.neg { color: var(--red); }
+    .result-row-val.neu { color: var(--text-muted); }
+    .winner-banner { display: flex; align-items: center; gap: 0.5rem; background: var(--gold-light); border: 1px solid #e8c87a; border-radius: 6px; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.82rem; }
+    .winner-banner .icon { font-size: 1.1rem; }
+    .winner-banner strong { color: var(--gold); }
+    .beds-breakdown { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 1rem; }
+    .beds-breakdown-header { padding: 0.85rem 1.25rem; border-bottom: 1px solid var(--border); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'DM Mono', monospace; color: var(--text-muted); background: var(--bg); }
+    .beds-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .beds-table th { padding: 0.55rem 1.25rem; text-align: left; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; font-family: 'DM Mono', monospace; color: var(--text-muted); font-weight: 500; border-bottom: 1px solid var(--border-light); }
+    .beds-table td { padding: 0.6rem 1.25rem; border-bottom: 1px solid var(--border-light); vertical-align: middle; }
+    .beds-table tr:last-child td { border-bottom: none; }
+    .beds-table tr:hover td { background: #f5f1e8; }
+    .mono { font-family: 'DM Mono', monospace; }
+    .disclaimer { font-size: 0.72rem; color: var(--text-faint); line-height: 1.5; padding: 0.75rem 0; border-top: 1px solid var(--border-light); margin-top: 0.5rem; }
+    .ai-sources { font-size: 0.72rem; color: var(--text-muted); font-style: italic; margin-top: 0.5rem; line-height: 1.6; }
+    .rent-loading { text-align: center; padding: 3rem 2rem; color: var(--text-muted); }
+    .rent-loading .spinner-lg { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 1rem; }
+    .rent-loading p { font-size: 0.85rem; }
+    .rent-loading .loading-step { font-size: 0.75rem; color: var(--text-faint); font-family: 'DM Mono', monospace; margin-top: 0.5rem; }
+
+    .spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--text); color: white; padding: 0.65rem 1.1rem; border-radius: 4px; font-size: 0.8rem; opacity: 0; transform: translateY(8px); transition: all 0.2s; pointer-events: none; z-index: 1000; }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    /* MORTGAGE CARD */
+    .mortgage-section { margin-bottom: 1rem; }
+    .mortgage-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .mortgage-card-header { display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1.25rem; border-bottom: 1px solid var(--border); background: var(--bg); }
+    .mortgage-card-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; font-family: 'DM Mono', monospace; color: var(--text-muted); font-weight: 500; }
+    .mortgage-rate-badge { font-family: 'DM Mono', monospace; font-size: 0.75rem; font-weight: 500; color: var(--blue); background: var(--blue-light); padding: 0.2rem 0.6rem; border-radius: 3px; border: 1px solid #aabbd4; }
+    .mortgage-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+    .mortgage-cell { padding: 1rem 1.25rem; border-right: 1px solid var(--border-light); }
+    .mortgage-cell:last-child { border-right: none; }
+    .mortgage-cell-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 500; margin-bottom: 0.3rem; }
+    .mortgage-cell-val { font-family: 'DM Serif Display', serif; font-size: 1.5rem; line-height: 1; margin-bottom: 0.2rem; }
+    .mortgage-cell-sub { font-size: 0.7rem; color: var(--text-faint); }
+    .cashflow-grid { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--border); }
+    .cashflow-cell { padding: 0.85rem 1.25rem; border-right: 1px solid var(--border-light); }
+    .cashflow-cell:last-child { border-right: none; }
+    .cashflow-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 500; margin-bottom: 0.2rem; }
+    .cashflow-val { font-family: 'DM Mono', monospace; font-size: 1.1rem; font-weight: 500; }
+    .cashflow-val.pos { color: var(--accent); }
+    .cashflow-val.neg { color: var(--red); }
+    .cashflow-val.break { color: var(--gold); }
+    .cashflow-sub { font-size: 0.7rem; color: var(--text-faint); margin-top: 0.1rem; }
+    .rate-adj { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap; }
+    .rate-adj label { font-size: 0.7rem; color: var(--text-muted); }
+    .rate-adj input[type=range] { width: 140px; accent-color: var(--blue); }
+    .rate-adj .rate-display { font-family: 'DM Mono', monospace; font-size: 0.8rem; font-weight: 500; color: var(--blue); min-width: 3.5rem; }
+    .dp-adj { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; }
+    .dp-adj label { font-size: 0.7rem; color: var(--text-muted); }
+    .dp-adj input[type=range] { width: 140px; accent-color: var(--accent); }
+    .dp-adj .dp-display { font-family: 'DM Mono', monospace; font-size: 0.8rem; font-weight: 500; color: var(--accent); min-width: 2.5rem; }
+
+    @media (max-width: 768px) {
+      header { padding: 0 1rem; }
+      .rent-inputs { grid-template-columns: 1fr 1fr; }
+      .rent-results-grid { grid-template-columns: 1fr; }
+      .fg5, .fg4 { grid-template-columns: 1fr 1fr; }
+      .mortgage-grid { grid-template-columns: 1fr; }
+      .mortgage-cell { border-right: none; border-bottom: 1px solid var(--border-light); }
+      .mortgage-cell:last-child { border-bottom: none; }
+      .cashflow-grid { grid-template-columns: 1fr; }
+      .cashflow-cell { border-right: none; border-bottom: 1px solid var(--border-light); }
+      .cashflow-cell:last-child { border-bottom: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><h1>Property Leads</h1><span>Tracker</span></div>
+  <div class="header-actions">
+    <span class="sync-info" id="syncInfo">—</span>
+    <button class="btn btn-ghost" id="syncHeaderBtn" onclick="toggleGmailPanel()">⟳ Sync Gmail</button>
+    <button class="btn btn-primary" id="addHeaderBtn" onclick="toggleAddPanel()">+ Add Listing</button>
+  </div>
+</header>
+
+<div class="tab-bar">
+  <div class="tab active" onclick="switchTab('listings',this)">Listings</div>
+  <div class="tab" onclick="switchTab('rent',this)">Rent Estimator</div>
+</div>
+
+<!-- ═══ TAB 1: LISTINGS ═══ -->
+<div class="tab-content active" id="tab-listings">
+
+  <div class="stats-bar">
+    <div class="stat"><div><div class="stat-num" id="statTotal">0</div><div class="stat-label">Total</div></div></div>
+    <div class="stat"><div><div class="stat-num" id="statNew">0</div><div class="stat-label">New</div></div></div>
+    <div class="stat"><div><div class="stat-num" id="statInterested">0</div><div class="stat-label">Interested</div></div></div>
+    <div class="stat"><div><div class="stat-num" id="statToured">0</div><div class="stat-label">Toured</div></div></div>
+    <div class="stat"><div><div class="stat-num" id="statAvgPrice">—</div><div class="stat-label">Avg Price</div></div></div>
+  </div>
+
+  <div class="panel panel-green" id="gmailPanel">
+    <h3>Sync from Gmail</h3>
+    <p>Searches your Gmail for all emails labeled <strong>property-lead</strong> and extracts property details using AI. Any email you forward or label from any source will be picked up.</p>
+    <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;">
+      <button class="btn btn-primary" id="syncBtn" onclick="runGmailSync()">Start Sync</button>
+      <button class="btn btn-ghost" onclick="toggleGmailPanel()">Cancel</button>
+    </div>
+    <div class="gmail-log" id="gmailLog"></div>
+  </div>
+
+  <div class="panel panel-white" id="addPanel">
+    <h3>Add Listing Manually</h3>
+    <div class="form-grid fg5">
+      <div class="form-field"><label>Address</label><input type="text" id="fAddress" placeholder="123 Main St, City, ST" /></div>
+      <div class="form-field"><label>Price</label><input type="text" id="fPrice" placeholder="$325,000" /></div>
+      <div class="form-field"><label>Beds</label><input type="number" id="fBeds" placeholder="3" min="0" max="20" /></div>
+      <div class="form-field"><label>Baths</label><input type="number" id="fBaths" placeholder="2" step="0.5" min="0" /></div>
+      <div class="form-field"><label>Sq Ft</label><input type="number" id="fSqft" placeholder="1400" /></div>
+    </div>
+    <div class="form-grid fg4">
+      <div class="form-field"><label>Area / City</label><input type="text" id="fArea" placeholder="Arvada, CO" /></div>
+      <div class="form-field"><label>Source</label>
+        <select id="fSource"><option value="manual">Manual</option><option value="redfin">Redfin</option><option value="realtor">Realtor.com</option><option value="other">Other</option></select>
+      </div>
+      <div class="form-field"><label>Status</label>
+        <select id="fStatus"><option value="new">New</option><option value="interested">Interested</option><option value="toured">Toured</option><option value="pending">Pending</option><option value="passed">Passed</option></select>
+      </div>
+      <div class="form-field"><label>Link</label><input type="url" id="fLink" placeholder="https://redfin.com/..." /></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="toggleAddPanel()">Cancel</button>
+      <button class="btn btn-primary" onclick="addListingManual()">Add Listing</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="filter-group">
+      <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+      <button class="filter-btn" onclick="setFilter('new',this)">New</button>
+      <button class="filter-btn" onclick="setFilter('interested',this)">Interested</button>
+      <button class="filter-btn" onclick="setFilter('toured',this)">Toured</button>
+      <button class="filter-btn" onclick="setFilter('passed',this)">Passed</button>
+    </div>
+    <input class="search-input" type="text" placeholder="Search address or area…" oninput="renderTable()" id="searchInput" />
+    <div class="spacer"></div>
+    <button class="btn btn-ghost" onclick="exportCSV()" style="font-size:0.75rem;">↓ Export CSV</button>
+  </div>
+
+  <div class="table-wrap">
+    <table id="listingsTable">
+      <thead><tr>
+        <th onclick="sortBy('address')">Address ↕</th>
+        <th onclick="sortBy('price')">Price ↕</th>
+        <th onclick="sortBy('beds')" style="text-align:center">Bd ↕</th>
+        <th onclick="sortBy('baths')" style="text-align:center">Ba ↕</th>
+        <th onclick="sortBy('sqft')">Sq Ft ↕</th>
+        <th onclick="sortBy('area')">Area ↕</th>
+        <th>Source</th>
+        <th onclick="sortBy('status')">Status ↕</th>
+        <th onclick="sortBy('date')">Added ↕</th>
+        <th>Notes</th>
+        <th></th>
+      </tr></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+    <div id="emptyState" class="empty-state" style="display:none;">
+      <div class="big">No listings yet</div>
+      <p>Sync from Gmail to pull in your labeled alerts,<br>or add a listing manually above.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB 2: RENT ESTIMATOR ═══ -->
+<div class="tab-content" id="tab-rent">
+  <div class="rent-page">
+
+    <div class="rent-input-card">
+      <h2>Rent Estimator</h2>
+      <p>Enter a ZIP code and house size to get AI-researched rent estimates — long-term lease vs. Airbnb short-term rental — with a side-by-side monthly revenue comparison and a full bedroom breakdown.</p>
+      <div class="rent-inputs" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;">
+        <div class="form-field"><label>ZIP Code</label><input type="text" id="rZip" placeholder="80002" maxlength="5" /></div>
+        <div class="form-field"><label>Bedrooms</label>
+          <select id="rBeds">
+            <option value="studio">Studio</option><option value="1">1 bed</option>
+            <option value="2">2 bed</option><option value="3" selected>3 bed</option>
+            <option value="4">4 bed</option><option value="5">5 bed</option>
+          </select>
+        </div>
+        <div class="form-field"><label>Sq Ft (optional)</label><input type="number" id="rSqft" placeholder="1400" /></div>
+        <div class="form-field"><label>Purchase Price (optional)</label><input type="text" id="rPrice" placeholder="$325,000" /></div>
+        <div class="form-field"><label>Down Payment %</label><input type="number" id="rDown" value="20" min="3" max="50" step="1" /></div>
+        <button class="btn btn-primary" id="estimateBtn" onclick="runEstimate()" style="white-space:nowrap;align-self:end;">Estimate Rent</button>
+      </div>
+      <p style="margin-top:0.75rem;margin-bottom:0;font-size:0.7rem;color:var(--text-faint);">Also estimates 1–4 bed for comparison. Mortgage calculated at current rate for excellent credit. Powered by AI with live web search.</p>
+    </div>
+
+    <div class="rent-loading" id="rentLoading" style="display:none;">
+      <div class="spinner-lg"></div>
+      <p>Researching rental market…</p>
+      <div class="loading-step" id="loadingStep">Searching current rent data…</div>
+    </div>
+
+    <div id="rentResults" style="display:none;"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── TAB SWITCHING ────────────────────────────────────────────────────────────
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  const onListings = name === 'listings';
+  document.getElementById('syncHeaderBtn').style.display = onListings ? '' : 'none';
+  document.getElementById('addHeaderBtn').style.display  = onListings ? '' : 'none';
+}
+
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+const SK = 'propertyLeads_v1';
+let listings = [], currentFilter = 'all', sortKey = 'date', sortDir = -1, editingNoteId = null;
+function save() { try { localStorage.setItem(SK, JSON.stringify(listings)); } catch(e) {} }
+function load() { try { const d = localStorage.getItem(SK); if (d) listings = JSON.parse(d); } catch(e) { listings = []; } }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+// ─── PANELS ───────────────────────────────────────────────────────────────────
+function toggleAddPanel() {
+  document.getElementById('addPanel').classList.toggle('open');
+  if (document.getElementById('addPanel').classList.contains('open')) {
+    document.getElementById('gmailPanel').classList.remove('open');
+    document.getElementById('fAddress').focus();
+  }
+}
+function toggleGmailPanel() {
+  document.getElementById('gmailPanel').classList.toggle('open');
+  if (document.getElementById('gmailPanel').classList.contains('open')) {
+    document.getElementById('addPanel').classList.remove('open');
+    const log = document.getElementById('gmailLog');
+    log.classList.remove('visible'); log.innerHTML = '';
+  }
+}
+
+// ─── ADD MANUAL ───────────────────────────────────────────────────────────────
+function addListingManual() {
+  const address = document.getElementById('fAddress').value.trim();
+  if (!address) { toast('Please enter an address'); return; }
+  listings.unshift({
+    id: uid(), address,
+    price: parseFloat((document.getElementById('fPrice').value||'').replace(/[$,]/g,''))||null,
+    beds: parseFloat(document.getElementById('fBeds').value)||null,
+    baths: parseFloat(document.getElementById('fBaths').value)||null,
+    sqft: parseFloat(document.getElementById('fSqft').value)||null,
+    area: document.getElementById('fArea').value.trim(),
+    source: document.getElementById('fSource').value,
+    status: document.getElementById('fStatus').value,
+    link: document.getElementById('fLink').value.trim(),
+    notes: '', date: new Date().toISOString(), fromGmail: false,
+  });
+  save(); renderAll(); toggleAddPanel(); toast('Listing added ✓');
+  ['fAddress','fPrice','fBeds','fBaths','fSqft','fArea','fLink'].forEach(id => document.getElementById(id).value = '');
+}
+
+// ─── GMAIL SYNC ───────────────────────────────────────────────────────────────
+function glog(msg, type='') {
+  const el = document.getElementById('gmailLog');
+  el.classList.add('visible');
+  const s = document.createElement('span');
+  s.className = 'log-line ' + type; s.textContent = msg;
+  el.appendChild(s); el.scrollTop = el.scrollHeight;
+}
+
+async function runGmailSync() {
+  const btn = document.getElementById('syncBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Syncing…';
+  const logEl = document.getElementById('gmailLog');
+  logEl.innerHTML = ''; logEl.classList.add('visible');
+  glog('→ Connecting to Gmail…', 'info');
+  try {
+    glog('→ Searching for emails labeled "property-lead"…', 'info');
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514", max_tokens: 4000,
+        system: `You are a property listing extractor. Search Gmail for emails with the label "property-lead". Extract all property listings and return ONLY a JSON array (no markdown):
+[{"address":"full address","price":325000,"beds":3,"baths":2,"sqft":1400,"area":"City, ST","source":"redfin|realtor|manual","link":"url or null","emailDate":"ISO date"}]
+Return [] if none found. Numbers only, null for missing.`,
+        messages: [{role:"user",content:"Search my Gmail for all emails labeled 'property-lead' and extract every property listing."}],
+        mcp_servers: [{type:"url",url:"https://gmail.mcp.claude.com/mcp",name:"gmail-mcp"}]
+      })
+    });
+    if (!res.ok) { const e = await res.json().catch(()=>{}); throw new Error(e?.error?.message||`API ${res.status}`); }
+    const data = await res.json();
+    const text = data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    glog('→ Parsing results…', 'info');
+    let parsed = [];
+    try { const m = text.match(/\[[\s\S]*\]/); if(m) parsed = JSON.parse(m[0]); } catch(e) {}
+    if (!parsed.length) { glog('  ℹ No listings found. Make sure emails are labeled "property-lead".','info'); btn.disabled=false; btn.textContent='Start Sync'; return; }
+    glog(`→ Found ${parsed.length} listing(s). Importing…`,'ok');
+    let added=0, skipped=0;
+    for (const item of parsed) {
+      if (!item.address) continue;
+      if (listings.some(l=>l.address.toLowerCase()===item.address.toLowerCase())) { glog(`  ↷ Skipped: ${item.address}`,''); skipped++; continue; }
+      listings.unshift({id:uid(),address:item.address,price:typeof item.price==='number'?item.price:null,beds:item.beds||null,baths:item.baths||null,sqft:item.sqft||null,area:item.area||'',source:item.source||'redfin',link:item.link||'',notes:'',date:item.emailDate||new Date().toISOString(),status:'new',fromGmail:true});
+      glog(`  ✓ Added: ${item.address}`,'ok'); added++;
+    }
+    save(); renderAll();
+    document.getElementById('syncInfo').textContent = `Last sync ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`;
+    glog(`Done. ${added} added, ${skipped} skipped.`,'ok');
+    toast(`${added} listing${added!==1?'s':''} imported ✓`);
+  } catch(err) {
+    glog(`✗ ${err.message}`,'err');
+    glog('Check that Gmail is connected in Claude settings.','');
+    toast('Sync failed');
+  }
+  btn.disabled=false; btn.textContent='Start Sync';
+}
+
+// ─── TABLE ────────────────────────────────────────────────────────────────────
+function setFilter(f,el) { currentFilter=f; document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active'); renderTable(); }
+function sortBy(key) { sortDir = sortKey===key ? sortDir*-1 : -1; sortKey=key; renderTable(); }
+
+function getFiltered() {
+  const q = (document.getElementById('searchInput')?.value||'').toLowerCase();
+  return listings.filter(l => {
+    if (currentFilter!=='all' && l.status!==currentFilter) return false;
+    if (q && !l.address.toLowerCase().includes(q) && !(l.area||'').toLowerCase().includes(q)) return false;
+    return true;
+  }).sort((a,b) => {
+    let va=a[sortKey], vb=b[sortKey];
+    if (sortKey==='date'){va=new Date(va||0).getTime();vb=new Date(vb||0).getTime();}
+    if(va==null)return 1; if(vb==null)return -1;
+    if(typeof va==='string') return va.localeCompare(vb)*sortDir;
+    return (va-vb)*sortDir;
+  });
+}
+
+const SL = {new:'New',interested:'Interested',toured:'Toured',pending:'Pending',passed:'Passed'};
+const SC = ['new','interested','toured','pending','passed'];
+function eh(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function renderTable() {
+  const rows = getFiltered();
+  const tbody = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyState');
+  const table = document.getElementById('listingsTable');
+  if (!rows.length) { tbody.innerHTML=''; empty.style.display='block'; table.style.display='none'; }
+  else {
+    empty.style.display='none'; table.style.display='';
+    tbody.innerHTML = rows.map(l => {
+      const price = l.price?'$'+l.price.toLocaleString():'—';
+      const sqft  = l.sqft?l.sqft.toLocaleString():'—';
+      const date  = l.date?new Date(l.date).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'—';
+      const addr  = l.link?`<a class="address-link" href="${eh(l.link)}" target="_blank" rel="noopener">${eh(l.address)}</a>`:`<span class="address-link">${eh(l.address)}</span>`;
+      const srcL  = l.source==='redfin'?'Redfin':l.source==='realtor'?'Realtor.com':'Manual';
+      const note  = editingNoteId===l.id
+        ?`<input class="notes-input" id="ni_${l.id}" value="${eh(l.notes||'')}" onblur="saveNote('${l.id}')" onkeydown="if(event.key==='Enter')saveNote('${l.id}')" />`
+        :`<span class="notes-cell" onclick="startEditNote('${l.id}')" title="${eh(l.notes||'')}">${eh(l.notes||'')||'Add note…'}</span>`;
+      return `<tr>
+        <td>${addr}</td>
+        <td style="font-family:'DM Mono',monospace">${price}</td>
+        <td style="text-align:center">${l.beds??'—'}</td>
+        <td style="text-align:center">${l.baths??'—'}</td>
+        <td style="font-family:'DM Mono',monospace">${sqft}</td>
+        <td>${eh(l.area||'—')}</td>
+        <td><span class="source-badge"><span class="source-dot ${l.source}"></span>${srcL}</span></td>
+        <td><span class="badge badge-${l.status}" onclick="cycleStatus('${l.id}')" style="cursor:pointer" title="Click to change">${SL[l.status]||l.status}</span></td>
+        <td style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--text-muted)">${date}</td>
+        <td>${note}</td>
+        <td style="text-align:right"><button class="action-btn" onclick="removeListing('${l.id}')" title="Remove">✕</button></td>
+      </tr>`;
+    }).join('');
+    if (editingNoteId) { const inp=document.getElementById('ni_'+editingNoteId); if(inp){inp.focus();inp.select();} }
+  }
+  updateStats();
+}
+
+function cycleStatus(id) { const l=listings.find(x=>x.id===id); if(!l)return; l.status=SC[(SC.indexOf(l.status)+1)%SC.length]; save(); renderTable(); }
+function startEditNote(id) { editingNoteId=id; renderTable(); }
+function saveNote(id) { const inp=document.getElementById('ni_'+id); if(!inp)return; const l=listings.find(x=>x.id===id); if(l){l.notes=inp.value.trim();save();} editingNoteId=null; renderTable(); }
+function removeListing(id) { listings=listings.filter(l=>l.id!==id); save(); renderAll(); toast('Listing removed'); }
+
+function updateStats() {
+  document.getElementById('statTotal').textContent=listings.length;
+  document.getElementById('statNew').textContent=listings.filter(l=>l.status==='new').length;
+  document.getElementById('statInterested').textContent=listings.filter(l=>l.status==='interested').length;
+  document.getElementById('statToured').textContent=listings.filter(l=>l.status==='toured').length;
+  const p=listings.filter(l=>l.price);
+  document.getElementById('statAvgPrice').textContent=p.length?'$'+Math.round(p.reduce((s,l)=>s+l.price,0)/p.length).toLocaleString():'—';
+}
+function renderAll() { renderTable(); updateStats(); }
+function exportCSV() {
+  const rows=getFiltered();
+  const csv=[['Address','Price','Beds','Baths','SqFt','Area','Source','Status','Date','Notes','Link'].join(','),...rows.map(l=>[`"${(l.address||'').replace(/"/g,'""')}"`,l.price||'',l.beds||'',l.baths||'',l.sqft||'',`"${(l.area||'').replace(/"/g,'""')}"`,l.source||'',l.status||'',l.date?new Date(l.date).toLocaleDateString():'',`"${(l.notes||'').replace(/"/g,'""')}"`,l.link||''].join(','))].join('\n');
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download='property-leads.csv'; a.click();
+  toast('CSV exported ✓');
+}
+
+// ─── RENT ESTIMATOR ───────────────────────────────────────────────────────────
+async function runEstimate() {
+  const zip   = document.getElementById('rZip').value.trim();
+  const beds  = document.getElementById('rBeds').value;
+  const sqft  = document.getElementById('rSqft').value.trim();
+  const price = document.getElementById('rPrice').value.trim();
+  if (!zip || zip.length < 5) { toast('Please enter a valid ZIP code'); return; }
+
+  const btn = document.getElementById('estimateBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Researching…';
+  document.getElementById('rentResults').style.display='none';
+  document.getElementById('rentLoading').style.display='block';
+
+  const steps=['Searching long-term rent data for ZIP '+zip+'…','Searching Airbnb & STR nightly rates for this area…','Calculating occupancy and monthly revenue…','Comparing LTR vs STR scenarios…'];
+  let si=0;
+  const stepEl=document.getElementById('loadingStep');
+  stepEl.textContent=steps[0];
+  const timer=setInterval(()=>{ if(si<steps.length-1){si++;stepEl.textContent=steps[si];} },3200);
+
+  try {
+    const sqftNote = sqft?` Property is ~${sqft} sq ft.`:'';
+    const priceNote = price?` Purchase price: ${price}.`:'';
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        model:"claude-sonnet-4-20250514", max_tokens:3000,
+        tools:[{type:"web_search_20250305",name:"web_search"}],
+        system:`You are a rental market analyst. Use web search to find CURRENT rental market data for the specified ZIP code. Search for:
+1. Average monthly long-term rent for the specified bedroom count in that ZIP/city
+2. Airbnb average nightly rate and typical occupancy rate for that area
+3. Any notable STR regulations for that city
+
+Return ONLY a valid JSON object (no markdown, no extra text):
+{
+  "location": "City, ST (ZIP)",
+  "targetBeds": "3",
+  "ltr": {
+    "monthlyRent": 2100,
+    "monthlyRentLow": 1850,
+    "monthlyRentHigh": 2400,
+    "annualRevenue": 25200,
+    "vacancyRate": 0.05,
+    "netMonthly": 1995,
+    "notes": "market note"
+  },
+  "str": {
+    "avgNightlyRate": 180,
+    "avgNightlyLow": 140,
+    "avgNightlyHigh": 230,
+    "occupancyRate": 0.65,
+    "monthlyRevenue": 3510,
+    "annualRevenue": 42120,
+    "netMonthly": 2800,
+    "platformFee": 0.03,
+    "notes": "market note or regulation"
+  },
+  "winner": "str",
+  "winnerReason": "STR earns ~$800/mo more but requires active management",
+  "breakdownByBeds": [
+    {"beds":"1","ltrMonthly":1400,"strMonthly":2100},
+    {"beds":"2","ltrMonthly":1800,"strMonthly":2800},
+    {"beds":"3","ltrMonthly":2100,"strMonthly":3500},
+    {"beds":"4","ltrMonthly":2500,"strMonthly":4200}
+  ],
+  "dataSources": "sources summary",
+  "disclaimer": "brief disclaimer"
+}
+All values must be plain numbers. If purchase price provided, include grossYieldLTR and grossYieldSTR as percentages (numbers, not strings).`,
+        messages:[{role:"user",content:`Research rental market for ZIP ${zip}, targeting ${beds} bedroom(s).${sqftNote}${priceNote} Find current LTR and Airbnb/STR data, then return the JSON.`}]
+      })
+    });
+    clearInterval(timer);
+    if(!res.ok){const e=await res.json().catch(()=>{}); throw new Error(e?.error?.message||`API ${res.status}`);}
+    const data=await res.json();
+    const text=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    let result;
+    try { const m=text.match(/\{[\s\S]*\}/); if(!m)throw new Error('no JSON'); result=JSON.parse(m[0]); }
+    catch(e){throw new Error('Could not parse response — try again.');}
+    document.getElementById('rentLoading').style.display='none';
+    renderRentResults(result, price, parseFloat(document.getElementById('rDown').value)||20);
+  } catch(err) {
+    clearInterval(timer);
+    document.getElementById('rentLoading').style.display='none';
+    document.getElementById('rentResults').innerHTML=`<div class="empty-state"><div class="big">Oops</div><p>${err.message}</p></div>`;
+    document.getElementById('rentResults').style.display='block';
+    toast('Estimate failed — try again');
+  }
+  btn.disabled=false; btn.textContent='Estimate Rent';
+}
+
+function fmt(n){return n!=null?'$'+Math.round(n).toLocaleString():'—';}
+function pct(n){return n!=null?(n*100).toFixed(0)+'%':'—';}
+
+// Mortgage calculator
+function calcMortgage(loanAmt, annualRate, years) {
+  const r = annualRate / 100 / 12;
+  const n = years * 12;
+  if (r === 0) return loanAmt / n;
+  return loanAmt * (r * Math.pow(1+r,n)) / (Math.pow(1+r,n)-1);
+}
+
+function renderRentResults(r, purchasePrice, downPct) {
+  const ltr=r.ltr||{}, str=r.str||{};
+  const breakdown=r.breakdownByBeds||[];
+  const priceNum=parseFloat((purchasePrice||'').replace(/[$,]/g,''))||null;
+  const yLTR=r.grossYieldLTR?r.grossYieldLTR.toFixed(1)+'%':priceNum&&ltr.annualRevenue?((ltr.annualRevenue/priceNum)*100).toFixed(1)+'%':'—';
+  const ySTR=r.grossYieldSTR?r.grossYieldSTR.toFixed(1)+'%':priceNum&&str.annualRevenue?((str.annualRevenue/priceNum)*100).toFixed(1)+'%':'—';
+  const winSTR=(r.winner||'').toLowerCase().includes('str');
+  const targetBeds=document.getElementById('rBeds').value;
+
+  // Mortgage math
+  const RATE = 6.25; // current competitive rate for excellent credit, 30yr fixed
+  const dp = (downPct||20)/100;
+  const loanAmt = priceNum ? priceNum*(1-dp) : null;
+  const downAmt = priceNum ? priceNum*dp : null;
+  const monthlyPI = loanAmt ? calcMortgage(loanAmt, RATE, 30) : null;
+  // Estimates: property tax ~1.1%/yr, insurance ~0.5%/yr of purchase price
+  const monthlyTax = priceNum ? (priceNum*0.011)/12 : null;
+  const monthlyIns = priceNum ? (priceNum*0.005)/12 : null;
+  const totalMortgageCost = monthlyPI && monthlyTax && monthlyIns ? monthlyPI+monthlyTax+monthlyIns : monthlyPI;
+  const cfLTR = totalMortgageCost && ltr.netMonthly ? ltr.netMonthly - totalMortgageCost : null;
+  const cfSTR = totalMortgageCost && str.netMonthly ? str.netMonthly - totalMortgageCost : null;
+
+  const html=`
+    ${r.winnerReason?`<div class="winner-banner"><span class="icon">${winSTR?'🏡':'📋'}</span><div><strong>${winSTR?'Short-Term Rental wins':'Long-Term Rental wins'}</strong> for ${eh(r.location||'this area')} — ${eh(r.winnerReason)}</div></div>`:''}
+
+    <div class="rent-results-grid">
+      <div class="result-card ltr">
+        <div class="result-card-header"><div class="result-card-title">Long-Term Rental</div><span class="result-tag ltr">LTR</span></div>
+        <div class="result-main-price">${fmt(ltr.monthlyRent)}</div>
+        <div class="result-sub">avg/mo &nbsp;·&nbsp; range ${fmt(ltr.monthlyRentLow)} – ${fmt(ltr.monthlyRentHigh)}</div>
+        <div class="result-rows">
+          <div class="result-row"><span class="result-row-label">Vacancy rate</span><span class="result-row-val neu">${pct(ltr.vacancyRate)}</span></div>
+          <div class="result-row"><span class="result-row-label">Net monthly (after vacancy)</span><span class="result-row-val pos">${fmt(ltr.netMonthly)}</span></div>
+          <div class="result-row"><span class="result-row-label">Annual gross revenue</span><span class="result-row-val pos">${fmt(ltr.annualRevenue)}</span></div>
+          ${priceNum||r.grossYieldLTR?`<div class="result-row"><span class="result-row-label">Gross yield</span><span class="result-row-val neu">${yLTR}</span></div>`:''}
+        </div>
+        ${ltr.notes?`<p style="font-size:0.72rem;color:var(--text-muted);margin-top:0.75rem;font-style:italic;line-height:1.5">${eh(ltr.notes)}</p>`:''}
+      </div>
+
+      <div class="result-card str">
+        <div class="result-card-header"><div class="result-card-title">Short-Term / Airbnb</div><span class="result-tag str">STR</span></div>
+        <div class="result-main-price">${fmt(str.monthlyRevenue)}</div>
+        <div class="result-sub">avg/mo &nbsp;·&nbsp; ${pct(str.occupancyRate)} occupancy</div>
+        <div class="result-rows">
+          <div class="result-row"><span class="result-row-label">Avg nightly rate</span><span class="result-row-val neu">${fmt(str.avgNightlyRate)} <small style="color:var(--text-faint)">(${fmt(str.avgNightlyLow)}–${fmt(str.avgNightlyHigh)})</small></span></div>
+          <div class="result-row"><span class="result-row-label">Platform fee (~${pct(str.platformFee||0.03)})</span><span class="result-row-val neg">−${fmt((str.monthlyRevenue||0)*(str.platformFee||0.03))}</span></div>
+          <div class="result-row"><span class="result-row-label">Net monthly (after fees)</span><span class="result-row-val pos">${fmt(str.netMonthly)}</span></div>
+          <div class="result-row"><span class="result-row-label">Annual gross revenue</span><span class="result-row-val pos">${fmt(str.annualRevenue)}</span></div>
+          ${priceNum||r.grossYieldSTR?`<div class="result-row"><span class="result-row-label">Gross yield</span><span class="result-row-val neu">${ySTR}</span></div>`:''}
+        </div>
+        ${str.notes?`<p style="font-size:0.72rem;color:var(--text-muted);margin-top:0.75rem;font-style:italic;line-height:1.5">${eh(str.notes)}</p>`:''}
+      </div>
+    </div>
+
+
+    ${(monthlyPI && priceNum) ? `
+    <div class="mortgage-section">
+      <div class="mortgage-card">
+        <div class="mortgage-card-header">
+          <div class="mortgage-card-title">Mortgage Cost Breakdown</div>
+          <span class="mortgage-rate-badge">6.25% · 30yr fixed · Excellent credit</span>
+        </div>
+        <div class="mortgage-grid">
+          <div class="mortgage-cell">
+            <div class="mortgage-cell-label">Down Payment (${downPct}%)</div>
+            <div class="mortgage-cell-val">${fmt(downAmt)}</div>
+            <div class="mortgage-cell-sub">of ${fmt(priceNum)} purchase price</div>
+          </div>
+          <div class="mortgage-cell">
+            <div class="mortgage-cell-label">Loan Amount</div>
+            <div class="mortgage-cell-val">${fmt(loanAmt)}</div>
+            <div class="mortgage-cell-sub">principal + interest only</div>
+          </div>
+          <div class="mortgage-cell">
+            <div class="mortgage-cell-label">Monthly P&amp;I</div>
+            <div class="mortgage-cell-val">${fmt(monthlyPI)}</div>
+            <div class="mortgage-cell-sub">at 6.25% · 360 payments</div>
+          </div>
+        </div>
+        <div class="cashflow-grid">
+          <div class="cashflow-cell">
+            <div class="cashflow-label">Total Monthly Cost (P&amp;I + Tax + Ins)</div>
+            <div class="cashflow-val neu" style="color:var(--text)">${fmt(totalMortgageCost)}</div>
+            <div class="cashflow-sub">est. tax ~${fmt(monthlyTax)}/mo · ins ~${fmt(monthlyIns)}/mo</div>
+          </div>
+          <div class="cashflow-cell" style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+            <div style="padding-right:1rem;border-right:1px solid var(--border-light)">
+              <div class="cashflow-label">LTR Cash Flow</div>
+              <div class="cashflow-val ${cfLTR >= 0 ? 'pos' : 'neg'}">${cfLTR >= 0 ? '+' : ''}${fmt(cfLTR)}<span style="font-size:0.65rem;font-weight:400">/mo</span></div>
+              <div class="cashflow-sub">${cfLTR >= 0 ? 'positive cash flow ✓' : 'negative — needs subsidy'}</div>
+            </div>
+            <div style="padding-left:1rem;">
+              <div class="cashflow-label">STR Cash Flow</div>
+              <div class="cashflow-val ${cfSTR >= 0 ? 'pos' : 'neg'}">${cfSTR >= 0 ? '+' : ''}${fmt(cfSTR)}<span style="font-size:0.65rem;font-weight:400">/mo</span></div>
+              <div class="cashflow-sub">${cfSTR >= 0 ? 'positive cash flow ✓' : 'negative — needs subsidy'}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>` : priceNum ? `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1rem;font-size:0.8rem;color:var(--text-muted);">Enter a purchase price above to see mortgage costs and cash flow.</div>` : ''}
+
+    ${breakdown.length?`
+    <div class="beds-breakdown">
+      <div class="beds-breakdown-header">Revenue by Bedroom Count — ${eh(r.location||'')}</div>
+      <table class="beds-table">
+        <thead><tr><th>Size</th><th>LTR Monthly</th><th>STR Monthly</th><th>STR Advantage</th></tr></thead>
+        <tbody>
+          ${breakdown.map(row=>{
+            const diff=(row.strMonthly||0)-(row.ltrMonthly||0);
+            const diffStr=diff>0?`<span style="color:var(--accent)">+${fmt(diff)}</span>`:`<span style="color:var(--red)">${fmt(diff)}</span>`;
+            const focus=String(row.beds)===String(targetBeds);
+            return `<tr${focus?' style="background:var(--gold-light)"':''}>
+              <td style="font-weight:500">${row.beds} bed${row.beds==='1'||row.beds===1?'':'s'}${focus?' ←':''}</td>
+              <td class="mono">${fmt(row.ltrMonthly)}</td>
+              <td class="mono">${fmt(row.strMonthly)}</td>
+              <td>${diffStr}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`:''}
+
+    ${r.dataSources?`<div class="ai-sources">Sources: ${eh(r.dataSources)}</div>`:''}
+    <div class="disclaimer">⚠ AI-generated estimates based on live web data. Actual rental income varies by property condition, local regulations, management costs, seasonality, and market changes. Consult a local property manager or agent before making decisions.</div>
+  `;
+  const el=document.getElementById('rentResults');
+  el.innerHTML=html; el.style.display='block';
+}
+
+// ─── TOAST & INIT ─────────────────────────────────────────────────────────────
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
+load(); renderAll();
+</script>
+</body>
+</html>
