@@ -416,7 +416,7 @@ async function runGmailSync() {
   glog('→ Connecting to Gmail…', 'info');
   try {
     glog('→ Searching for emails labeled "property-lead"…', 'info');
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await fetch("https://property-leads-tracker.vercel.app/api/proxy", {
       method: "POST", headers: {"Content-Type":"application/json"},
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514", max_tokens: 4000,
@@ -556,7 +556,7 @@ async function runEstimate() {
   try {
     const sqftNote = sqft?` Property is ~${sqft} sq ft.`:'';
     const priceNote = price?` Purchase price: ${price}.`:'';
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await fetch("https://property-leads-tracker.vercel.app/api/proxy", {
       method:"POST", headers:{"Content-Type":"application/json"},
       body: JSON.stringify({
         model:"claude-sonnet-4-20250514", max_tokens:3000,
